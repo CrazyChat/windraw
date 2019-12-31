@@ -69,7 +69,7 @@ void changeDrawWhat(int dowhat) {
     DO_WHAT = dowhat;
 }
 
-// 画直线, 参数：HDC, 钢笔风格，笔宽，起点，终点 (其中笔的颜色由 全局画笔颜色 决定，笔宽由 全局笔宽决定)
+// 画直线, 参数：HDC, 钢笔风格，起点，终点 (其中笔色，笔宽填充色，由全局变量决定)
 void CreateLine(HDC hdc, int fnPenStyle, int oX, int oY, int nX, int nY) {
     HPEN hpen = CreatePen(fnPenStyle, PENWIDTH, PAINTCOLOR);  // 实线
     HPEN oldhpen = (HPEN)SelectObject(hdc, hpen);      // 选入画笔,并保存旧画笔
@@ -78,11 +78,11 @@ void CreateLine(HDC hdc, int fnPenStyle, int oX, int oY, int nX, int nY) {
     SelectObject(hdc, oldhpen);     // 恢复先前画笔
 	DeleteObject(hpen);            // 删除自创画笔
 }
-// 画矩形, 参数：HDC, 钢笔风格，笔宽，左顶点，右底终点 (其中笔色，填充色由 全局颜色 决定)
+// 画矩形, 参数：HDC, 钢笔风格，左顶点，右底终点 (其中笔色，填充色由全局变量决定)
 void CreateRectangle(HDC hdc, int fnPenStyle, int nWidth, int ltX, int ltY, int rbX, int rbY) {
     HPEN hpen, oldhpen;
     HBRUSH hbrush, oldhbrush;
-	hpen = CreatePen(fnPenStyle, PENWIDTH, PAINTCOLOR);          // 创建空画笔
+	hpen = CreatePen(fnPenStyle, nWidth, PAINTCOLOR);          // 创建空画笔
     hbrush = CreateSolidBrush(FILLCOLOR);                    // 填充颜色
     oldhpen = (HPEN)SelectObject(hdc, hpen);                     // 选入画笔, 并保存旧画笔
     oldhbrush = (HBRUSH)SelectObject(hdc, hbrush);              // 选入画刷，并保存旧画刷
@@ -266,7 +266,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         }
-        case WM_LBUTTONDOWN:
+        case WM_LBUTTONDOWN:        // 鼠标左键按下
         {
             start_x = GET_X_LPARAM(lParam); /*此处使用该方法是避免鼠标移除操作窗口，而使得获取位置发生错误*/
             start_y= GET_Y_LPARAM(lParam); /*使用该方法需要 包含头文件<windowsx.h>*/
@@ -274,7 +274,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             end_y = start_y;
             break;
         }
-        case WM_LBUTTONUP:
+        case WM_LBUTTONUP:          // 鼠标左键松开
         {
             // hdc = BeginPaint(hwnd, &ps);
             HDC hdc = GetDC(hwnd);
