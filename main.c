@@ -65,8 +65,12 @@ void changePaintColor(int color) {
 }
 // 改变填充颜色
 void changeFillColor(int color) {
-    ISFILL = 1;
-    FILLCOLOR = getColorRGB(color);
+    if(color != FILL_BTN_NULL) {
+        ISFILL = 1;
+        FILLCOLOR = getColorRGB(color);
+        return;
+    }
+    ISFILL = 0;
     return;
 }
 // 修改鼠标事件
@@ -89,13 +93,17 @@ void CreateRectangle(HDC hdc, int fnPenStyle, int nWidth, int ltX, int ltY, int 
     HBRUSH hbrush, oldhbrush;
 	hpen = CreatePen(fnPenStyle, nWidth, PAINTCOLOR);          // 创建空画笔
     oldhpen = (HPEN)SelectObject(hdc, hpen);                     // 选入画笔, 并保存旧画笔
+    if(ISFILL) {
         hbrush = CreateSolidBrush(FILLCOLOR);                    // 填充颜色
         oldhbrush = (HBRUSH)SelectObject(hdc, hbrush);              // 选入画刷，并保存旧画刷
+    }
     Rectangle(hdc, ltX, ltY, rbX, rbY);
     SelectObject(hdc, oldhpen);
+    DeleteObject(hpen);            // 删除自创画笔
+    if(ISFILL) {
 	    SelectObject(hdc, oldhbrush);
         DeleteObject(hbrush);           //删除画刷
-    DeleteObject(hpen);            // 删除自创画笔
+    }
 }
 // 绘制(椭)圆, 参数：HDC, 外切矩形左上、右下坐标
 void CreateCricle(HDC hdc, int ltX, int ltY, int rbX, int rbY) {
@@ -201,6 +209,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
                 240 /*X坐标*/, 60 /*Y坐标*/, 20 /*宽度*/, 30/*高度*/,
                 hwnd, (HMENU)FILL_BTN_YELLOW, (HINSTANCE)GetWindowLong(hwnd, GWL_HINSTANCE), NULL);
+            HWND null_fill_btn = CreateWindow(
+                TEXT("BUTTON"), //按钮控件的类名
+                TEXT("无"),
+                WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                270 /*X坐标*/, 60 /*Y坐标*/, 20 /*宽度*/, 30/*高度*/,
+                hwnd, (HMENU)FILL_BTN_NULL, (HINSTANCE)GetWindowLong(hwnd, GWL_HINSTANCE), NULL);
             // 创建功能按钮
             HWND choice_shape = CreateWindow(TEXT("static"), 
                 TEXT("选择形状"),
@@ -259,6 +273,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     changeFillColor(FILL_BTN_BLUE);break;
                 case FILL_BTN_YELLOW:
                     changeFillColor(FILL_BTN_YELLOW); break;
+                case FILL_BTN_NULL:
+                    changeFillColor(FILL_BTN_NULL); break;
                 // 改变画图事件
                 case LINE_BTN:
                     changeDrawWhat(FILL_BTN_WHITE);break;
