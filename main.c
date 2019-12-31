@@ -25,7 +25,7 @@ const char g_szClassName[] = "myWindowClass";
 #define CLEAN_BTN 35
 
 // 全局变量
-COLORREF PAINTCOLOR = RGB(255, 0, 0);      // 全局画笔颜色
+COLORREF PAINTCOLOR = RGB(0, 0, 0);      // 全局画笔颜色
 COLORREF FILLCOLOR = RGB(255, 255, 255);       // 全局填充颜色
 int ISFILL = 0;
 int PENWIDTH = 3;
@@ -290,7 +290,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     changeFillColor(FILL_BTN_NULL); break;
                 // 改变画图事件
                 case LINE_BTN:
-                    changeDrawWhat(FILL_BTN_WHITE);break;
+                    changeDrawWhat(LINE_BTN);break;
                 case RECT_BTN:
                     changeDrawWhat(RECT_BTN);break;
                 case CRICLE_BTN:
@@ -394,7 +394,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         g_szClassName,
         "The title of my window",
         WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 1000, 1000,
+        CW_USEDEFAULT, CW_USEDEFAULT, 1000, 700,
         NULL, NULL, hInstance, NULL);
 
     if (hwnd == NULL)
