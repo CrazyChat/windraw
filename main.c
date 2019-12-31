@@ -21,6 +21,8 @@ const char g_szClassName[] = "myWindowClass";
 #define LINE_BTN 31
 #define RECT_BTN 32
 #define CRICLE_BTN 33
+#define FILLAREA_BTN 34
+#define CLEAN_BTN 35
 
 // 全局变量
 COLORREF PAINTCOLOR = RGB(255, 0, 0);      // 全局画笔颜色
@@ -238,6 +240,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
                 190 /*X坐标*/, 100 /*Y坐标*/, 40 /*宽度*/, 30/*高度*/,
                 hwnd, (HMENU)CRICLE_BTN, (HINSTANCE)GetWindowLong(hwnd, GWL_HINSTANCE), NULL);
+            HWND fillarea_btn = CreateWindow(
+                TEXT("BUTTON"), //按钮控件的类名
+                TEXT("填充"),
+                WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                240 /*X坐标*/, 100 /*Y坐标*/, 40 /*宽度*/, 30/*高度*/,
+                hwnd, (HMENU)FILLAREA_BTN, (HINSTANCE)GetWindowLong(hwnd, GWL_HINSTANCE), NULL);
+            HWND clean_btn = CreateWindow(
+                TEXT("BUTTON"), //按钮控件的类名
+                TEXT("擦除"),
+                WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                290 /*X坐标*/, 100 /*Y坐标*/, 40 /*宽度*/, 30/*高度*/,
+                hwnd, (HMENU)CLEAN_BTN, (HINSTANCE)GetWindowLong(hwnd, GWL_HINSTANCE), NULL);
             break;
         }
         case WM_COMMAND:
@@ -281,6 +295,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     changeDrawWhat(RECT_BTN);break;
                 case CRICLE_BTN:
                     changeDrawWhat(CRICLE_BTN);break;
+                case FILLAREA_BTN:
+                    changeDrawWhat(FILLAREA_BTN);break;
+                case CLEAN_BTN:
+                    changeFillColor(FILL_BTN_NULL);
+                    changeDrawWhat(CLEAN_BTN);break;
                 default:
                     break;
             }
@@ -316,9 +335,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     case LINE_BTN:
                         CreateLine(hdc, 4, start_x, start_y, end_x, end_y);break;
                     case RECT_BTN:
-                        CreateRectangle(hdc, PS_NULL, 1, start_x, start_y, end_x, end_y);break;
+                        CreateRectangle(hdc, PS_SOLID, 1, start_x, start_y, end_x, end_y);break;
                     case CRICLE_BTN:
                         CreateCricle(hdc, start_x, start_y, end_x, end_y);break;
+                    case FILLAREA_BTN:
+                        CreateRectangle(hdc, PS_NULL, 1, start_x, start_y, end_x, end_y);break;
+                    case CLEAN_BTN:
+                        CreateRectangle(hdc, PS_NULL, 1, start_x, start_y, end_x, end_y);break;
                     default:
                         break;
                 }
