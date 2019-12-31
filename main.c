@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <windowsx.h>
+#include <stdio.h>
 
 const char g_szClassName[] = "myWindowClass";
 // 画笔颜色按钮ID
@@ -106,6 +107,7 @@ void CreateCricle(HDC hdc, int ltX, int ltY, int rbX, int rbY) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     PAINTSTRUCT ps;
     HDC hdc;    // 开始绘制
+    int isMouseHold = 0;    // 鼠标是否按下
     int wmId, wmEvent;
     int start_x, start_y, end_x, end_y;
     switch (msg)
@@ -224,8 +226,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_COMMAND:
         {
-            wmId = LOWORD(wParam);
-            wmEvent = HIWORD(wParam);
+            wmId = GET_X_LPARAM(wParam);
+            wmEvent = GET_Y_LPARAM(wParam);
             switch(wmId)
             {
                 // 改变画笔颜色
@@ -268,16 +270,32 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_LBUTTONDOWN:        // 鼠标左键按下
         {
+            isMouseHold = 1;
             start_x = GET_X_LPARAM(lParam); /*此处使用该方法是避免鼠标移除操作窗口，而使得获取位置发生错误*/
             start_y= GET_Y_LPARAM(lParam); /*使用该方法需要 包含头文件<windowsx.h>*/
             end_x = start_x;
             end_y = start_y;
             break;
         }
+        case WM_MOUSEMOVE:          // 鼠标不松开移动
+        {
+            if(isMouseHold)          // bMouseDown记录操作过程中是否按下鼠标
+            {
+                hdc = GetDC(hwnd);
+                SetROP2(hdc, R2_NOT);
+                MoveToEx(hdc, start_x, start_y, NULL);
+                LineTo(hdc, end_x, end_y);
+                end_x = GET_X_LPARAM(lParam);
+                end_y = GET_Y_LPARAM(lParam);
+                MoveToEx(hdc, start_x, start_y, NULL);
+                LineTo(hdc, end_x, end_y);
+                ReleaseDC(hwnd, hdc);
+            }
+        }
         case WM_LBUTTONUP:          // 鼠标左键松开
         {
-            // hdc = BeginPaint(hwnd, &ps);
-            HDC hdc = GetDC(hwnd);
+            isMouseHold = 0;
+            hdc = GetDC(hwnd);
             end_x = GET_X_LPARAM(lParam);
             end_y = GET_Y_LPARAM(lParam);
             switch(DO_WHAT)
@@ -292,21 +310,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     break;
             }
             ReleaseDC(hwnd,hdc);
-            // EndPaint(hwnd, &ps);
             break;
         }
-        case WM_PAINT:
-        {
-            hdc = BeginPaint(hwnd, &ps);
-            // 绘制直线
-            CreateLine(hdc, PS_SOLID, 30, 200, 70, 220);
-            // 绘制矩形
-            CreateRectangle(hdc, PS_NULL, 1, 10, 240, 70, 260);
-            // 绘制(椭)圆
-            CreateCricle(hdc, 10, 260, 70, 280);
-            EndPaint(hwnd, &ps);
-		    break;
-        }
+        // case WM_PAINT:
+        // {
+        //     hdc = BeginPaint(hwnd, &ps);
+        //     // 绘制直线
+        //     CreateLine(hdc, PS_SOLID, 30, 200, 70, 220);
+        //     // 绘制矩形
+        //     CreateRectangle(hdc, PS_NULL, 1, 10, 240, 70, 260);
+        //     // 绘制(椭)圆
+        //     CreateCricle(hdc, 10, 260, 70, 280);
+        //     EndPaint(hwnd, &ps);
+		//     break;
+        // }
         case WM_CLOSE:
             DestroyWindow(hwnd);
             break;
