@@ -29,7 +29,10 @@ int ISFILL = 0;
 int PENWIDTH = 3;
 int DO_WHAT =  LINE_BTN;
 int start_x, start_y, end_x, end_y;
-
+PAINTSTRUCT ps;
+HDC hdc;
+int isMouseHold = 0;    // 鼠标是否按下
+int wmId, wmEvent;
 
 // 获取颜色的rgb值
 COLORREF getColorRGB(int color) {
@@ -117,10 +120,6 @@ void CreateCricle(HDC hdc, int ltX, int ltY, int rbX, int rbY) {
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    PAINTSTRUCT ps;
-    HDC hdc;    // 开始绘制
-    int isMouseHold = 0;    // 鼠标是否按下
-    int wmId, wmEvent;
     switch (msg)
     {
         case WM_CREATE:
@@ -313,22 +312,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         // }
         case WM_LBUTTONUP:          // 鼠标左键松开
         {
-            isMouseHold = 0;
-            hdc = GetDC(hwnd);
-            end_x = GET_X_LPARAM(lParam);
-            end_y = GET_Y_LPARAM(lParam);
-            switch(DO_WHAT)
-            {
-                case LINE_BTN:
-                    CreateLine(hdc, 4, start_x, start_y, end_x, end_y);break;
-                case RECT_BTN:
-                    CreateRectangle(hdc, PS_NULL, 1, start_x, start_y, end_x, end_y);break;
-                case CRICLE_BTN:
-                    CreateCricle(hdc, start_x, start_y, end_x, end_y);break;
-                default:
-                    break;
+            if(isMouseHold) {
+                isMouseHold = 0;
+                hdc = GetDC(hwnd);
+                end_x = GET_X_LPARAM(lParam);
+                end_y = GET_Y_LPARAM(lParam);
+                switch(DO_WHAT)
+                {
+                    case LINE_BTN:
+                        CreateLine(hdc, 4, start_x, start_y, end_x, end_y);break;
+                    case RECT_BTN:
+                        CreateRectangle(hdc, PS_NULL, 1, start_x, start_y, end_x, end_y);break;
+                    case CRICLE_BTN:
+                        CreateCricle(hdc, start_x, start_y, end_x, end_y);break;
+                    default:
+                        break;
+                }
+                ReleaseDC(hwnd,hdc);
             }
-            ReleaseDC(hwnd,hdc);
             break;
         }
         // case WM_PAINT:
