@@ -1,6 +1,5 @@
 #include <windows.h>
 #include <windowsx.h>
-#include <stdio.h>
 
 const char g_szClassName[] = "myWindowClass";
 // 画笔颜色按钮ID
@@ -17,6 +16,7 @@ const char g_szClassName[] = "myWindowClass";
 #define FILL_BTN_GREEN 24
 #define FILL_BTN_BLUE 25
 #define FILL_BTN_YELLOW 26
+#define FILL_BTN_NULL 20
 // 功能按键ID
 #define LINE_BTN 31
 #define RECT_BTN 32
@@ -24,9 +24,12 @@ const char g_szClassName[] = "myWindowClass";
 
 // 全局变量
 COLORREF PAINTCOLOR = RGB(255, 0, 0);      // 全局画笔颜色
-COLORREF FILLCOLOR = RGB(0, 0, 0);       // 全局填充颜色
+COLORREF FILLCOLOR = RGB(255, 255, 255);       // 全局填充颜色
+int ISFILL = 0;
 int PENWIDTH = 3;
 int DO_WHAT =  LINE_BTN;
+int start_x, start_y, end_x, end_y;
+
 
 // 获取颜色的rgb值
 COLORREF getColorRGB(int color) {
@@ -62,6 +65,7 @@ void changePaintColor(int color) {
 }
 // 改变填充颜色
 void changeFillColor(int color) {
+    ISFILL = 1;
     FILLCOLOR = getColorRGB(color);
     return;
 }
@@ -84,13 +88,13 @@ void CreateRectangle(HDC hdc, int fnPenStyle, int nWidth, int ltX, int ltY, int 
     HPEN hpen, oldhpen;
     HBRUSH hbrush, oldhbrush;
 	hpen = CreatePen(fnPenStyle, nWidth, PAINTCOLOR);          // 创建空画笔
-    hbrush = CreateSolidBrush(FILLCOLOR);                    // 填充颜色
     oldhpen = (HPEN)SelectObject(hdc, hpen);                     // 选入画笔, 并保存旧画笔
-    oldhbrush = (HBRUSH)SelectObject(hdc, hbrush);              // 选入画刷，并保存旧画刷
+        hbrush = CreateSolidBrush(FILLCOLOR);                    // 填充颜色
+        oldhbrush = (HBRUSH)SelectObject(hdc, hbrush);              // 选入画刷，并保存旧画刷
     Rectangle(hdc, ltX, ltY, rbX, rbY);
     SelectObject(hdc, oldhpen);
-	SelectObject(hdc, oldhbrush);
-    DeleteObject(hbrush);  //删除画刷
+	    SelectObject(hdc, oldhbrush);
+        DeleteObject(hbrush);           //删除画刷
     DeleteObject(hpen);            // 删除自创画笔
 }
 // 绘制(椭)圆, 参数：HDC, 外切矩形左上、右下坐标
@@ -109,7 +113,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     HDC hdc;    // 开始绘制
     int isMouseHold = 0;    // 鼠标是否按下
     int wmId, wmEvent;
-    int start_x, start_y, end_x, end_y;
     switch (msg)
     {
         case WM_CREATE:
@@ -277,21 +280,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             end_y = start_y;
             break;
         }
-        case WM_MOUSEMOVE:          // 鼠标不松开移动
-        {
-            if(isMouseHold)          // bMouseDown记录操作过程中是否按下鼠标
-            {
-                hdc = GetDC(hwnd);
-                SetROP2(hdc, R2_NOT);
-                MoveToEx(hdc, start_x, start_y, NULL);
-                LineTo(hdc, end_x, end_y);
-                end_x = GET_X_LPARAM(lParam);
-                end_y = GET_Y_LPARAM(lParam);
-                MoveToEx(hdc, start_x, start_y, NULL);
-                LineTo(hdc, end_x, end_y);
-                ReleaseDC(hwnd, hdc);
-            }
-        }
+        // case WM_MOUSEMOVE:          // 鼠标不松开移动
+        // {
+        //     if(isMouseHold)          // bMouseDown记录操作过程中是否按下鼠标
+        //     {
+        //         hdc = GetDC(hwnd);
+        //         SetROP2(hdc, R2_NOT);
+        //         MoveToEx(hdc, start_x, start_y, NULL);
+        //         LineTo(hdc, end_x, end_y);
+        //         end_x = GET_X_LPARAM(lParam);
+        //         end_y = GET_Y_LPARAM(lParam);
+        //         MoveToEx(hdc, start_x, start_y, NULL);
+        //         LineTo(hdc, end_x, end_y);
+        //         ReleaseDC(hwnd, hdc);
+        //     }
+        // }
         case WM_LBUTTONUP:          // 鼠标左键松开
         {
             isMouseHold = 0;
