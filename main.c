@@ -300,20 +300,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         //     if(isMouseHold)          // bMouseDown记录操作过程中是否按下鼠标
         //     {
         //         hdc = GetDC(hwnd);
-        //         SetROP2(hdc, R2_NOT);
         //         MoveToEx(hdc, start_x, start_y, NULL);
-        //         LineTo(hdc, end_x, end_y);
-        //         end_x = GET_X_LPARAM(lParam);
-        //         end_y = GET_Y_LPARAM(lParam);
-        //         MoveToEx(hdc, start_x, start_y, NULL);
-        //         LineTo(hdc, end_x, end_y);
+        //         LineTo(hdc, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
         //         ReleaseDC(hwnd, hdc);
         //     }
         // }
         case WM_LBUTTONUP:          // 鼠标左键松开
         {
             if(isMouseHold) {
-                isMouseHold = 0;
                 hdc = GetDC(hwnd);
                 end_x = GET_X_LPARAM(lParam);
                 end_y = GET_Y_LPARAM(lParam);
@@ -330,20 +324,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 ReleaseDC(hwnd,hdc);
             }
+            isMouseHold = 0;
             break;
         }
-        // case WM_PAINT:
-        // {
-        //     hdc = BeginPaint(hwnd, &ps);
-        //     // 绘制直线
-        //     CreateLine(hdc, PS_SOLID, 30, 200, 70, 220);
-        //     // 绘制矩形
-        //     CreateRectangle(hdc, PS_NULL, 1, 10, 240, 70, 260);
-        //     // 绘制(椭)圆
-        //     CreateCricle(hdc, 10, 260, 70, 280);
-        //     EndPaint(hwnd, &ps);
-		//     break;
-        // }
         case WM_CLOSE:
             DestroyWindow(hwnd);
             break;
