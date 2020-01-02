@@ -21,8 +21,7 @@ const char g_szClassName[] = "myWindowClass";
 #define LINE_BTN 31
 #define RECT_BTN 32
 #define Ellipse_BTN 33
-// #define CRICLE_BTN 34
-#define CLEAN_BTN 35
+#define CLEAN_BTN 34
 // 画笔类型
 #define SOLID_BTN PS_SOLID
 #define DASH_BTN PS_DASH
@@ -165,27 +164,7 @@ void CreateEraser(HDC hdc, struct Point start, struct Point end) {
     DeleteObject(hpen);
     DeleteObject(hbrush);
 }
-// 画圆, 参数：HDC,
-// void CreateCricle(HDC hdc, struct Point start, struct Point end){
-//     // todo计算半径
-//     int r = 50;
-//     HPEN hpen, oldhpen;
-//     HBRUSH hbrush, oldhbrush;
-// 	hpen = CreatePen(PENSTYLE, PENWIDTH, PAINTCOLOR);          // 创建空画笔
-//     oldhpen = (HPEN)SelectObject(hdc, hpen);                    // 选入画笔, 并保存旧画笔
-//     // 判断是否填充颜色
-//     if(ISFILL) {
-//         hbrush = CreateSolidBrush(FILLCOLOR);                 // 填充颜色
-//     } else {
-//         hbrush = (HBRUSH)GetStockObject(NULL_BRUSH);
-//     }
-//     oldhbrush = (HBRUSH)SelectObject(hdc, hbrush);              // 选入画刷，并保存旧画刷
-//     AngleArc(hdc, start.x, start.y, r, 0, 360);
-//     SelectObject(hdc, oldhpen);
-// 	SelectObject(hdc, oldhbrush);
-//     DeleteObject(hpen);            // 删除自创画笔
-//     DeleteObject(hbrush);           //删除画刷
-// }
+
 
 // 重绘
 void ReDraw(HDC hdc, int i) {
@@ -208,8 +187,6 @@ void ReDraw(HDC hdc, int i) {
                 CreateRectangle(hdc, startPoint, endPoint);break;
             case Ellipse_BTN:
                 CreateEllipse(hdc, startPoint, endPoint);break;
-            // case CRICLE_BTN:
-            //     CreateCricle(hdc, startPoint, endPoint);break;
             case CLEAN_BTN:
                 CreateEraser(hdc, startPoint, endPoint);break;
             default:
@@ -405,8 +382,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     changeDrawWhat(RECT_BTN);break;
                 case Ellipse_BTN:
                     changeDrawWhat(Ellipse_BTN);break;
-                // case CRICLE_BTN:
-                //     changeDrawWhat(CRICLE_BTN);break;
                 case CLEAN_BTN:
                     changeDrawWhat(CLEAN_BTN);break;
                 // 改变画笔类型
@@ -455,8 +430,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         CreateRectangle(hdc, startPoint, endPoint);break;
                     case Ellipse_BTN:
                         CreateEllipse(hdc, startPoint, endPoint);break;
-                    // case CRICLE_BTN:
-                    //     CreateCricle(hdc, startPoint, endPoint);break;
                     case CLEAN_BTN:
                         CreateEraser(hdc, startPoint, endPoint);break;
                     default:
