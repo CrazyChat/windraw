@@ -170,6 +170,22 @@ void CreateEraser(HDC hdc, struct Point start, struct Point end) {
     DeleteObject(hpen);
     DeleteObject(hbrush);
 }
+// 保存所有旧样式
+void SaveOldStyle() {
+    oldPenColor = PAINTCOLOR;
+    oldFillColor = FILLCOLOR;
+    oldPenStyle = PENSTYLE;
+    oldIsFill = ISFILL;
+    oldDo_What = DO_WHAT;
+}
+// 恢复旧样式
+void ReOldStyle() {
+    PAINTCOLOR = oldPenColor;
+    FILLCOLOR = oldFillColor;
+    PENSTYLE = oldPenStyle;
+    ISFILL = oldIsFill;
+    DO_WHAT = oldDo_What;
+}
 // 调用事件, 参数：DO_WAHT
 void DoFunc(int id) {
     switch(id)
@@ -211,11 +227,7 @@ void backStep(HWND hwnd) {
         startPoint.y = startPoints[nowPoint].y;
         endPoint.x = endPoints[nowPoint].x;
         endPoint.y = endPoints[nowPoint].y;
-        oldPenColor = PAINTCOLOR;
-        oldFillColor = FILLCOLOR;
-        oldPenStyle = PENSTYLE;
-        oldIsFill = ISFILL;
-        oldDo_What = DO_WHAT;
+        SaveOldStyle();
         PAINTCOLOR = RGB(255, 255, 255);
         FILLCOLOR = RGB(255, 255, 255);
         PENSTYLE = nowPenStyle[nowPoint];
@@ -224,11 +236,7 @@ void backStep(HWND hwnd) {
         DoFunc(DO_WHAT);
         ReDraw(hdc, 0);             // 重绘所有，以防被最后一步操作挡住的画面丢失
         // 恢复最后一步的操作样式
-        PAINTCOLOR = oldPenColor;
-        FILLCOLOR = oldFillColor;
-        PENSTYLE = oldPenStyle;
-        ISFILL = oldIsFill;
-        DO_WHAT = oldDo_What;
+        ReOldStyle();
         ReleaseDC(hwnd, hdc);
     }
 }
@@ -236,11 +244,7 @@ void backStep(HWND hwnd) {
 void forwardStep(HWND hwnd) {
     if(nowPoint < OPLENGTH) {
         hdc = GetDC(hwnd);
-        oldPenColor = PAINTCOLOR;
-        oldFillColor = FILLCOLOR;
-        oldPenStyle = PENSTYLE;
-        oldIsFill = ISFILL;
-        oldDo_What = DO_WHAT;
+        SaveOldStyle();
         // 开始恢复
         startPoint.x = startPoints[nowPoint].x;
         startPoint.y = startPoints[nowPoint].y;
@@ -253,11 +257,7 @@ void forwardStep(HWND hwnd) {
         DO_WHAT = nowPenDo[nowPoint];
         DoFunc(DO_WHAT);
         // 恢复最后一步的操作样式
-        PAINTCOLOR = oldPenColor;
-        FILLCOLOR = oldFillColor;
-        PENSTYLE = oldPenStyle;
-        ISFILL = oldIsFill;
-        DO_WHAT = oldDo_What;
+        ReOldStyle();
         nowPoint++;
         ReleaseDC(hwnd, hdc);
     }
@@ -488,25 +488,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             endPoint.y = startPoint.y;
             break;
         }
-        case WM_MOUSEMOVE:          // 鼠标不松开移动
-        {
-            if(isMouseHold)          // bMouseDown记录操作过程中是否按下鼠标
-            {
-                hdc = GetDC(hwnd);
-                // 覆盖上一条
-                SetROP2(hdc,R2_NOT);
-                DoFunc(DO_WHAT);
-                // 绘制新操作
-                SetROP2(hdc, R2_COPYPEN);
-                endPoint.x = GET_X_LPARAM(lParam);
-                endPoint.y = GET_Y_LPARAM(lParam);
-                DoFunc(DO_WHAT);
-                // 重新绘制前面所有操作防止因为新操作移动挡住而丢失
-                // ReDraw(hdc, 0);
-                ReleaseDC(hwnd, hdc);
-            }
-            break;
-        }
+        // case WM_MOUSEMOVE:          // 鼠标不松开移动
+        // {
+        //     if(isMouseHold)          // bMouseDown记录操作过程中是否按下鼠标
+        //     {
+        //         hdc = GetDC(hwnd);
+        //         // 覆盖上一条
+        //         SetROP2(hdc,R2_NOT);
+        //         DoFunc(DO_WHAT);
+        //         // 绘制新操作
+        //         SetROP2(hdc, R2_COPYPEN);
+        //         endPoint.x = GET_X_LPARAM(lParam);
+        //         endPoint.y = GET_Y_LPARAM(lParam);
+        //         DoFunc(DO_WHAT);
+        //         // 重新绘制前面所有操作防止因为新操作移动挡住而丢失
+        //         // ReDraw(hdc, 0);
+        //         ReleaseDC(hwnd, hdc);
+        //     }
+        //     break;
+        // }
         case WM_LBUTTONUP:          // 鼠标左键松开
         {
             if(isMouseHold) {
