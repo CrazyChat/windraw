@@ -241,6 +241,8 @@ void backStep(HWND hwnd) {
         // 恢复最后一步的操作样式
         ReOldStyle();
         ReleaseDC(hwnd, hdc);
+    } else {
+        MessageBox(NULL, "没有更多可后退步骤", "提示", MB_OK);
     }
 }
 // 前进一步
@@ -263,6 +265,8 @@ void forwardStep(HWND hwnd) {
         ReOldStyle();
         nowPoint++;
         ReleaseDC(hwnd, hdc);
+    } else {
+        MessageBox(NULL, "没有更多可前进步骤", "提示", MB_OK);
     }
 }
 
