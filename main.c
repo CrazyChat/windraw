@@ -508,22 +508,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             endPoint.y = startPoint.y;
             break;
         }
-        // case WM_MOUSEMOVE:          // 鼠标不松开移动
-        // {
-        //     if(MK_LBUTTON)          // bMouseDown记录操作过程中是否按下鼠标
-        //     {
-        //         hdc = GetDC(hwnd);
-        //         end_x = GET_X_LPARAM(lParam);
-        //         end_y = GET_Y_LPARAM(lParam);
-        //         MoveToEx(hdc, start_x, start_y, NULL);
-        //         LineTo(hdc, end_x, end_y);
-        //         ReleaseDC(hwnd, hdc);
-        //     }
-        //     break;
-        // }
+        case WM_MOUSEMOVE:          // 鼠标不松开移动
+        {
+            if(isMouseHold)          // bMouseDown记录操作过程中是否按下鼠标
+            {
+                hdc = GetDC(hwnd);
+                // 覆盖上一条
+                SetROP2(hdc,R2_NOT);
+                MoveToEx(hdc, startPoint.x, startPoint.y, NULL);
+                LineTo(hdc, endPoint.x, endPoint.y);
+                // 绘制新操作
+                SetROP2(hdc, R2_COPYPEN);
+                endPoint.x = GET_X_LPARAM(lParam);
+                endPoint.y = GET_Y_LPARAM(lParam);
+                MoveToEx(hdc, startPoint.x, startPoint.y, NULL);
+                LineTo(hdc, endPoint.x, endPoint.y);
+                // 重新绘制前面所有操作防止因为新操作移动挡住而丢失
+                // ReDraw(hdc, 0);
+                ReleaseDC(hwnd, hdc);
+            }
+            break;
+        }
         case WM_LBUTTONUP:          // 鼠标左键松开
         {
             if(isMouseHold) {
+                isMouseHold = 0;
                 hdc = GetDC(hwnd);
                 endPoint.x = GET_X_LPARAM(lParam);
                 endPoint.y = GET_Y_LPARAM(lParam);
@@ -552,9 +561,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 nowIsFill[nowPoint] = ISFILL;
                 nowPenDo[nowPoint] = DO_WHAT;
                 nowPoint++;
+                OPLENGTH = nowPoint;
             }
-            isMouseHold = 0;
-            OPLENGTH = nowPoint;
             break;
         }
         case WM_PAINT:
