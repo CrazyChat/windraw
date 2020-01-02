@@ -86,6 +86,10 @@ void changeFillColor(int color) {
 void changeDrawWhat(int dowhat) {
     DO_WHAT = dowhat;
 }
+// 修改画笔事件
+void changePenStyle(int style) {
+    PENSTYLE = style;
+}
 
 // 画直线, 参数：HDC, 起点，终点
 void CreateLine(HDC hdc, int oX, int oY, int nX, int nY) {
@@ -269,6 +273,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
                 290 /*X坐标*/, 100 /*Y坐标*/, 40 /*宽度*/, 30/*高度*/,
                 hwnd, (HMENU)CLEAN_BTN, (HINSTANCE)GetWindowLong(hwnd, GWL_HINSTANCE), NULL);
+            // 创建画笔类型
+            HWND pen_style = CreateWindow(TEXT("static"), 
+                TEXT("画笔类型"),
+                WS_CHILD | WS_VISIBLE | BS_CENTER,
+                20, 140, 60, 30,
+                hwnd, NULL, (HINSTANCE)GetWindowLong(hwnd, GWL_HINSTANCE), NULL);
+            HWND solid_btn = CreateWindow(
+                TEXT("BUTTON"), //按钮控件的类名
+                TEXT("实线"),
+                WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                90 /*X坐标*/, 140 /*Y坐标*/, 40 /*宽度*/, 30/*高度*/,
+                hwnd, (HMENU)SOLID_BTN, (HINSTANCE)GetWindowLong(hwnd, GWL_HINSTANCE), NULL);
+            HWND bash_btn = CreateWindow(
+                TEXT("BUTTON"), //按钮控件的类名
+                TEXT("虚线"),
+                WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                140 /*X坐标*/, 140 /*Y坐标*/, 40 /*宽度*/, 30/*高度*/,
+                hwnd, (HMENU)DASH_BTN, (HINSTANCE)GetWindowLong(hwnd, GWL_HINSTANCE), NULL);
             break;
         }
         case WM_COMMAND:
@@ -317,6 +339,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case CLEAN_BTN:
                     changeFillColor(FILL_BTN_NULL);
                     changeDrawWhat(CLEAN_BTN);break;
+                // 改变画笔类型
+                case SOLID_BTN:
+                    changePenStyle(SOLID_BTN);break;
+                case DASH_BTN:
+                    changePenStyle(DASH_BTN);break;
                 default:
                     break;
             }
