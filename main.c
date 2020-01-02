@@ -115,14 +115,18 @@ void CreateRectangle(HDC hdc, int fnPenStyle, int ltX, int ltY, int rbX, int rbY
 void CreateEllipse(HDC hdc, int ltX, int ltY, int rbX, int rbY) {
     HPEN hpen, oldhpen;
     HBRUSH hbrush, oldhbrush;
-    hbrush = (HBRUSH)GetStockObject(NULL_BRUSH);
-    oldhbrush = (HBRUSH)SelectObject(hdc, hbrush);
     hpen = CreatePen(PS_SOLID, PENWIDTH, PAINTCOLOR);
     oldhpen = (HPEN)SelectObject(hdc, hpen);
+    if(ISFILL) {
+        hbrush = CreateSolidBrush(FILLCOLOR);
+    } else {
+        hbrush = (HBRUSH)GetStockObject(NULL_BRUSH);
+    }
+    oldhbrush = (HBRUSH)SelectObject(hdc, hbrush);
     Ellipse(hdc, ltX, ltY, rbX, rbY);   // 外切矩形左上、右下坐标
+    SelectObject(hdc, oldhpen);
     SelectObject(hdc, oldhbrush);
 	DeleteObject(hbrush);
-    SelectObject(hdc, oldhpen);
     DeleteObject(hpen);
 }
 // 绘制圆, 参数：
