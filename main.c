@@ -23,18 +23,22 @@ const char g_szClassName[] = "myWindowClass";
 #define CRICLE_BTN 33
 #define FILLAREA_BTN 34
 #define CLEAN_BTN 35
+// 画笔类型
+#define SOLID_BTN PS_SOLID
+#define DASH_BTN PS_DASH
 
 // 全局变量
-COLORREF PAINTCOLOR = RGB(0, 0, 0);      // 全局画笔颜色
-COLORREF FILLCOLOR = RGB(255, 255, 255);       // 全局填充颜色
-int ISFILL = 0;
-int PENWIDTH = 3;
-int DO_WHAT =  LINE_BTN;
-int start_x, start_y, end_x, end_y;
-PAINTSTRUCT ps;
-HDC hdc;
+COLORREF PAINTCOLOR = RGB(0, 0, 0);                 // 全局画笔颜色
+COLORREF FILLCOLOR = RGB(255, 255, 255);            // 全局填充颜色
+int PENSTYLE = DASH_BTN;                             // 全局画笔类型
+int ISFILL = 0;                                     // 是否填充颜色判断
+int PENWIDTH = 1;                                   // 钢笔粗细
+int DO_WHAT =  LINE_BTN;                            // 画笔功能
+int start_x, start_y, end_x, end_y;                 // 触发点和终止点
 int isMouseHold = 0;    // 鼠标是否按下
 int wmId, wmEvent;
+PAINTSTRUCT ps;
+HDC hdc;
 
 // 获取颜色的rgb值
 COLORREF getColorRGB(int color) {
@@ -83,24 +87,24 @@ void changeDrawWhat(int dowhat) {
     DO_WHAT = dowhat;
 }
 
-// 画直线, 参数：HDC, 钢笔风格，起点，终点 (其中笔色，笔宽填充色，由全局变量决定)
-void CreateLine(HDC hdc, int fnPenStyle, int oX, int oY, int nX, int nY) {
-    HPEN hpen = CreatePen(fnPenStyle, PENWIDTH, PAINTCOLOR);  // 实线
+// 画直线, 参数：HDC, 起点，终点
+void CreateLine(HDC hdc, int oX, int oY, int nX, int nY) {
+    HPEN hpen = CreatePen(PENSTYLE, PENWIDTH, PAINTCOLOR);  // 实线
     HPEN oldhpen = (HPEN)SelectObject(hdc, hpen);      // 选入画笔,并保存旧画笔
     MoveToEx(hdc, oX, oY, NULL);    // 起点
 	LineTo(hdc, nX, nY);            // 终点
     SelectObject(hdc, oldhpen);     // 恢复先前画笔
 	DeleteObject(hpen);            // 删除自创画笔
 }
-// 画矩形, 参数：HDC, 钢笔风格，左顶点，右底终点 (其中笔色，填充色由全局变量决定)
-void CreateRectangle(HDC hdc, int fnPenStyle, int ltX, int ltY, int rbX, int rbY) {
+// 画矩形, 参数：HDC, 左顶点，右底终点
+void CreateRectangle(HDC hdc, int ltX, int ltY, int rbX, int rbY) {
     HPEN hpen, oldhpen;
     HBRUSH hbrush, oldhbrush;
-	hpen = CreatePen(fnPenStyle, PENWIDTH, PAINTCOLOR);          // 创建空画笔
+	hpen = CreatePen(PENSTYLE, PENWIDTH, PAINTCOLOR);          // 创建空画笔
     oldhpen = (HPEN)SelectObject(hdc, hpen);                    // 选入画笔, 并保存旧画笔
     // 判断是否填充颜色
     if(ISFILL) {
-        hbrush = CreateSolidBrush(FILLCOLOR);                    // 填充颜色
+        hbrush = CreateSolidBrush(FILLCOLOR);                 // 填充颜色
     } else {
         hbrush = (HBRUSH)GetStockObject(NULL_BRUSH);
     }
@@ -115,7 +119,7 @@ void CreateRectangle(HDC hdc, int fnPenStyle, int ltX, int ltY, int rbX, int rbY
 void CreateEllipse(HDC hdc, int ltX, int ltY, int rbX, int rbY) {
     HPEN hpen, oldhpen;
     HBRUSH hbrush, oldhbrush;
-    hpen = CreatePen(PS_SOLID, PENWIDTH, PAINTCOLOR);
+    hpen = CreatePen(PENSTYLE, PENWIDTH, PAINTCOLOR);
     oldhpen = (HPEN)SelectObject(hdc, hpen);
     if(ISFILL) {
         hbrush = CreateSolidBrush(FILLCOLOR);
@@ -346,9 +350,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 switch(DO_WHAT)
                 {
                     case LINE_BTN:
-                        CreateLine(hdc, 4, start_x, start_y, end_x, end_y);break;
+                        CreateLine(hdc, start_x, start_y, end_x, end_y);break;
                     case RECT_BTN:
-                        CreateRectangle(hdc, PS_SOLID, start_x, start_y, end_x, end_y);break;
+                        CreateRectangle(hdc, start_x, start_y, end_x, end_y);break;
                     case CRICLE_BTN:
                         CreateEllipse(hdc, start_x, start_y, end_x, end_y);break;
                     case FILLAREA_BTN:
