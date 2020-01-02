@@ -110,15 +110,24 @@ void CreateRectangle(HDC hdc, int fnPenStyle, int nWidth, int ltX, int ltY, int 
         DeleteObject(hbrush);           //删除画刷
     }
 }
-// 绘制(椭)圆, 参数：HDC, 外切矩形左上、右下坐标
-void CreateCricle(HDC hdc, int ltX, int ltY, int rbX, int rbY) {
+// 绘制椭圆, 参数：HDC, 外切矩形左上、右下坐标
+void CreateEllipse(HDC hdc, int ltX, int ltY, int rbX, int rbY) {
+    HPEN hpen, oldhpen;
     HBRUSH hbrush, oldhbrush;
-    SetBkColor(hdc, FILLCOLOR);     // 设置当前背景颜色
-    hbrush = CreateHatchBrush(HS_CROSS, PAINTCOLOR);
+    // hbrush = CreateHatchBrush(HS_CROSS, PAINTCOLOR);
+    hbrush = (HBRUSH)GetStockObject(NULL_BRUSH);
     oldhbrush = (HBRUSH)SelectObject(hdc, hbrush);
+    hpen = CreatePen(PS_SOLID, PENWIDTH, PAINTCOLOR);
+    oldhpen = (HPEN)SelectObject(hdc, hpen);
     Ellipse(hdc, ltX, ltY, rbX, rbY);   // 外切矩形左上、右下坐标
     SelectObject(hdc, oldhbrush);
 	DeleteObject(hbrush);
+    SelectObject(hdc, oldhpen);
+    DeleteObject(hpen);
+}
+// 绘制圆, 参数：
+void CreateCircle() {
+
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -337,7 +346,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     case RECT_BTN:
                         CreateRectangle(hdc, PS_SOLID, 1, start_x, start_y, end_x, end_y);break;
                     case CRICLE_BTN:
-                        CreateCricle(hdc, start_x, start_y, end_x, end_y);break;
+                        CreateEllipse(hdc, start_x, start_y, end_x, end_y);break;
                     case FILLAREA_BTN:
                         CreateRectangle(hdc, PS_NULL, 1, start_x, start_y, end_x, end_y);break;
                     case CLEAN_BTN:
