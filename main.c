@@ -33,9 +33,16 @@ const char g_szClassName[] = "myWindowClass";
 struct Point {
     int x;
     int y;
-}startPoint, endPoint;  // 所有起点、终点
-// int operations[MAXOP];                // 所有操作
-// int nowPoint = 0;                   // 当前操作索引
+}startPoint, endPoint, startPoints[MAXOP], endPoints[MAXOP];  // 所有起点、终点
+
+int nowPoint = 0;                        // 当前操作索引
+COLORREF nowPenColors[MAXOP];            // 画笔颜色
+COLORREF nowFillColor[MAXOP];            // 填充颜色
+int nowPenStyle[MAXOP];                  // 画笔类型
+int nowIsFill[MAXOP];                    // 是否填充
+int nowPenDo[MAXOP];                     // 画笔功能
+
+
 // 全局变量
 COLORREF PAINTCOLOR = RGB(0, 0, 0);                 // 全局画笔颜色
 COLORREF FILLCOLOR = RGB(255, 255, 255);            // 全局填充颜色
@@ -43,8 +50,7 @@ int PENSTYLE = SOLID_BTN;                             // 全局画笔类型
 int ISFILL = 0;                                     // 是否填充颜色判断
 int PENWIDTH = 1;                                   // 钢笔粗细
 int DO_WHAT =  LINE_BTN;                            // 画笔功能
-int start_x, start_y, end_x, end_y;                 // 触发点和终止点
-int isMouseHold = 0;    // 鼠标是否按下
+int isMouseHold = 0;                                // 鼠标是否按下
 int wmId, wmEvent;
 PAINTSTRUCT ps;
 HDC hdc;
@@ -180,6 +186,37 @@ void CreateCricle(HDC hdc, struct Point start, struct Point end){
 	SelectObject(hdc, oldhbrush);
     DeleteObject(hpen);            // 删除自创画笔
     DeleteObject(hbrush);           //删除画刷
+}
+
+// 重绘
+void ReDraw(HDC hdc, int i) {
+    startPoint.x = startPoints[nowPoint].x;
+    startPoint.y = startPoints[nowPoint].y;
+    endPoint.x = endPoints[nowPoint].x;
+    endPoint.y = endPoints[nowPoint].y;
+    PAINTCOLOR = nowPenColors[nowPoint];
+    FILLCOLOR = nowFillColor[nowPoint];
+    PENSTYLE = nowPenStyle[nowPoint];
+    ISFILL = nowIsFill[nowPoint];
+    DO_WHAT = nowPenDo[nowPoint];
+    for (; i < nowPoint; i++)
+    {
+        switch(nowPenDo[i])
+        {
+            case LINE_BTN:
+                CreateLine(hdc, startPoint, endPoint);break;
+            case RECT_BTN:
+                CreateRectangle(hdc, startPoint, endPoint);break;
+            case Ellipse_BTN:
+                CreateEllipse(hdc, startPoint, endPoint);break;
+            case CRICLE_BTN:
+                CreateCricle(hdc, startPoint, endPoint);break;
+            case CLEAN_BTN:
+                CreateEraser(hdc, startPoint, endPoint);break;
+            default:
+                break;
+        }
+    }
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -394,10 +431,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             isMouseHold = 1;
             startPoint.x = GET_X_LPARAM(lParam);
             startPoint.y = GET_Y_LPARAM(lParam);
-            start_x = GET_X_LPARAM(lParam); /*此处使用该方法是避免鼠标移除操作窗口，而使得获取位置发生错误*/
-            start_y= GET_Y_LPARAM(lParam); /*使用该方法需要 包含头文件<windowsx.h>*/
-            end_x = start_x;
-            end_y = start_y;
             endPoint.x = startPoint.x;
             endPoint.y = startPoint.y;
             break;
@@ -419,8 +452,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         {
             if(isMouseHold) {
                 hdc = GetDC(hwnd);
-                endPoint.x = end_x = GET_X_LPARAM(lParam);
-                endPoint.y = end_y = GET_Y_LPARAM(lParam);
+                endPoint.x = GET_X_LPARAM(lParam);
+                endPoint.y = GET_Y_LPARAM(lParam);
                 switch(DO_WHAT)
                 {
                     case LINE_BTN:
@@ -437,6 +470,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         break;
                 }
                 ReleaseDC(hwnd,hdc);
+                // 记录所有操作
+                startPoints[nowPoint].x = startPoint.x;
+                startPoints[nowPoint].y = startPoint.y;
+                endPoints[nowPoint].x = endPoint.x;
+                endPoints[nowPoint].y = endPoint.y;
+                nowPenColors[nowPoint] = PAINTCOLOR;
+                nowFillColor[nowPoint] = FILLCOLOR;
+                nowPenStyle[nowPoint] = PENSTYLE;
+                nowIsFill[nowPoint] = ISFILL;
+                nowPenDo[nowPoint] = DO_WHAT;
             }
             isMouseHold = 0;
             break;
@@ -444,23 +487,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_PAINT:
         {
             hdc = BeginPaint(hwnd, &ps);
-            // todo 重绘
-            // for (i = 0; i < nowPoint; i++)
-            // {
-            //     switch(operations[i])
-            //     {
-            //         case LINE_BTN:
-            //             CreateLine(hdc, startPoints[i], endPoints[i]);break;
-            //         case RECT_BTN:
-            //             CreateRectangle(hdc, start_x, start_y, end_x, end_y);break;
-            //         case Ellipse_BTN:
-            //             CreateEllipse(hdc, start_x, start_y, end_x, end_y);break;
-            //         case CLEAN_BTN:
-            //             CreateEraser(hdc, start_x, start_y, end_x, end_y);break;
-            //         default:
-            //             break;
-            //     }
-            // }
+            // 重绘
+            CreateLine(hdc, startPoint, endPoint);break;
+            ReDraw(hdc, 0);
             EndPaint(hwnd, &ps);
             break;
         }
