@@ -515,14 +515,36 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 hdc = GetDC(hwnd);
                 // 覆盖上一条
                 SetROP2(hdc,R2_NOT);
-                MoveToEx(hdc, startPoint.x, startPoint.y, NULL);
-                LineTo(hdc, endPoint.x, endPoint.y);
+                switch(DO_WHAT)
+                {
+                    case LINE_BTN:
+                        CreateLine(hdc, startPoint, endPoint);break;
+                    case RECT_BTN:
+                        CreateRectangle(hdc, startPoint, endPoint);break;
+                    case Ellipse_BTN:
+                        CreateEllipse(hdc, startPoint, endPoint);break;
+                    case CLEAN_BTN:
+                        CreateEraser(hdc, startPoint, endPoint);break;
+                    default:
+                        break;
+                }
                 // 绘制新操作
                 SetROP2(hdc, R2_COPYPEN);
                 endPoint.x = GET_X_LPARAM(lParam);
                 endPoint.y = GET_Y_LPARAM(lParam);
-                MoveToEx(hdc, startPoint.x, startPoint.y, NULL);
-                LineTo(hdc, endPoint.x, endPoint.y);
+                switch(DO_WHAT)
+                {
+                    case LINE_BTN:
+                        CreateLine(hdc, startPoint, endPoint);break;
+                    case RECT_BTN:
+                        CreateRectangle(hdc, startPoint, endPoint);break;
+                    case Ellipse_BTN:
+                        CreateEllipse(hdc, startPoint, endPoint);break;
+                    case CLEAN_BTN:
+                        CreateEraser(hdc, startPoint, endPoint);break;
+                    default:
+                        break;
+                }
                 // 重新绘制前面所有操作防止因为新操作移动挡住而丢失
                 // ReDraw(hdc, 0);
                 ReleaseDC(hwnd, hdc);
