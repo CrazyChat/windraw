@@ -170,6 +170,22 @@ void CreateEraser(HDC hdc, struct Point start, struct Point end) {
     DeleteObject(hpen);
     DeleteObject(hbrush);
 }
+// 调用事件, 参数：DO_WAHT
+void DoFunc(int id) {
+    switch(id)
+    {
+        case LINE_BTN:
+            CreateLine(hdc, startPoint, endPoint);break;
+        case RECT_BTN:
+            CreateRectangle(hdc, startPoint, endPoint);break;
+        case Ellipse_BTN:
+            CreateEllipse(hdc, startPoint, endPoint);break;
+        case CLEAN_BTN:
+            CreateEraser(hdc, startPoint, endPoint);break;
+        default:
+            break;
+    }
+}
 // 重绘
 void ReDraw(HDC hdc, int i) {
     for (; i < nowPoint; i++)
@@ -183,19 +199,7 @@ void ReDraw(HDC hdc, int i) {
         PENSTYLE = nowPenStyle[i];
         ISFILL = nowIsFill[i];
         DO_WHAT = nowPenDo[i];
-        switch(DO_WHAT)
-        {
-            case LINE_BTN:
-                CreateLine(hdc, startPoint, endPoint);break;
-            case RECT_BTN:
-                CreateRectangle(hdc, startPoint, endPoint);break;
-            case Ellipse_BTN:
-                CreateEllipse(hdc, startPoint, endPoint);break;
-            case CLEAN_BTN:
-                CreateEraser(hdc, startPoint, endPoint);break;
-            default:
-                break;
-        }
+        DoFunc(DO_WHAT);
     }
 }
 // 撤销操作
@@ -217,19 +221,7 @@ void backStep(HWND hwnd) {
         PENSTYLE = nowPenStyle[nowPoint];
         ISFILL = nowIsFill[nowPoint];
         DO_WHAT = nowPenDo[nowPoint];
-        switch(DO_WHAT)
-        {
-            case LINE_BTN:
-                CreateLine(hdc, startPoint, endPoint);break;
-            case RECT_BTN:
-                CreateRectangle(hdc, startPoint, endPoint);break;
-            case Ellipse_BTN:
-                CreateEllipse(hdc, startPoint, endPoint);break;
-            case CLEAN_BTN:
-                CreateEraser(hdc, startPoint, endPoint);break;
-            default:
-                break;
-        }
+        DoFunc(DO_WHAT);
         ReDraw(hdc, 0);             // 重绘所有，以防被最后一步操作挡住的画面丢失
         // 恢复最后一步的操作样式
         PAINTCOLOR = oldPenColor;
@@ -259,19 +251,7 @@ void forwardStep(HWND hwnd) {
         PENSTYLE = nowPenStyle[nowPoint];
         ISFILL = nowIsFill[nowPoint];
         DO_WHAT = nowPenDo[nowPoint];
-        switch(DO_WHAT)
-        {
-            case LINE_BTN:
-                CreateLine(hdc, startPoint, endPoint);break;
-            case RECT_BTN:
-                CreateRectangle(hdc, startPoint, endPoint);break;
-            case Ellipse_BTN:
-                CreateEllipse(hdc, startPoint, endPoint);break;
-            case CLEAN_BTN:
-                CreateEraser(hdc, startPoint, endPoint);break;
-            default:
-                break;
-        }
+        DoFunc(DO_WHAT);
         // 恢复最后一步的操作样式
         PAINTCOLOR = oldPenColor;
         FILLCOLOR = oldFillColor;
@@ -515,36 +495,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 hdc = GetDC(hwnd);
                 // 覆盖上一条
                 SetROP2(hdc,R2_NOT);
-                switch(DO_WHAT)
-                {
-                    case LINE_BTN:
-                        CreateLine(hdc, startPoint, endPoint);break;
-                    case RECT_BTN:
-                        CreateRectangle(hdc, startPoint, endPoint);break;
-                    case Ellipse_BTN:
-                        CreateEllipse(hdc, startPoint, endPoint);break;
-                    case CLEAN_BTN:
-                        CreateEraser(hdc, startPoint, endPoint);break;
-                    default:
-                        break;
-                }
+                DoFunc(DO_WHAT);
                 // 绘制新操作
                 SetROP2(hdc, R2_COPYPEN);
                 endPoint.x = GET_X_LPARAM(lParam);
                 endPoint.y = GET_Y_LPARAM(lParam);
-                switch(DO_WHAT)
-                {
-                    case LINE_BTN:
-                        CreateLine(hdc, startPoint, endPoint);break;
-                    case RECT_BTN:
-                        CreateRectangle(hdc, startPoint, endPoint);break;
-                    case Ellipse_BTN:
-                        CreateEllipse(hdc, startPoint, endPoint);break;
-                    case CLEAN_BTN:
-                        CreateEraser(hdc, startPoint, endPoint);break;
-                    default:
-                        break;
-                }
+                DoFunc(DO_WHAT);
                 // 重新绘制前面所有操作防止因为新操作移动挡住而丢失
                 // ReDraw(hdc, 0);
                 ReleaseDC(hwnd, hdc);
@@ -558,19 +514,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 hdc = GetDC(hwnd);
                 endPoint.x = GET_X_LPARAM(lParam);
                 endPoint.y = GET_Y_LPARAM(lParam);
-                switch(DO_WHAT)
-                {
-                    case LINE_BTN:
-                        CreateLine(hdc, startPoint, endPoint);break;
-                    case RECT_BTN:
-                        CreateRectangle(hdc, startPoint, endPoint);break;
-                    case Ellipse_BTN:
-                        CreateEllipse(hdc, startPoint, endPoint);break;
-                    case CLEAN_BTN:
-                        CreateEraser(hdc, startPoint, endPoint);break;
-                    default:
-                        break;
-                }
+                DoFunc(DO_WHAT);
                 ReleaseDC(hwnd,hdc);
                 // 记录所有操作
                 startPoints[nowPoint].x = startPoint.x;
