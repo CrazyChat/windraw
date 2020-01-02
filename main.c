@@ -29,19 +29,20 @@ const char g_szClassName[] = "myWindowClass";
 #define DASH_BTN PS_DASH
 
 // 保存所有操作, todo改成动态数组
-#define MAXOP 100
+#define OPMAX 100
 struct Point {
     int x;
     int y;
-}startPoint, endPoint, startPoints[MAXOP], endPoints[MAXOP];  // 所有起点、终点
+}startPoint, endPoint, startPoints[OPMAX], endPoints[OPMAX];  // 所有起点、终点
 
 int nowPoint = 0;                        // 当前操作索引
-COLORREF nowPenColors[MAXOP];            // 画笔颜色
-COLORREF nowFillColor[MAXOP];            // 填充颜色
+int OPLENGTH = 0;                        // 已有操作最大值
+COLORREF nowPenColors[OPMAX];            // 画笔颜色
+COLORREF nowFillColor[OPMAX];            // 填充颜色
 
-int nowPenStyle[MAXOP];                  // 画笔类型
-int nowIsFill[MAXOP];                    // 是否填充
-int nowPenDo[MAXOP];                     // 画笔功能
+int nowPenStyle[OPMAX];                  // 画笔类型
+int nowIsFill[OPMAX];                    // 是否填充
+int nowPenDo[OPMAX];                     // 画笔功能
 
 
 // 全局变量
@@ -197,15 +198,15 @@ void ReDraw(HDC hdc, int i) {
         }
     }
 }
-// todo 撤销操作
+// 撤销操作
 void backStep(HWND hwnd) {
     if(nowPoint > 0) {
         hdc = GetDC(hwnd);
         nowPoint--;
-        // startPoint.x = startPoints[nowPoint].x;
-        // startPoint.y = startPoints[nowPoint].y;
-        // endPoint.x = endPoints[nowPoint].x;
-        // endPoint.y = endPoints[nowPoint].y;
+        startPoint.x = startPoints[nowPoint].x;
+        startPoint.y = startPoints[nowPoint].y;
+        endPoint.x = endPoints[nowPoint].x;
+        endPoint.y = endPoints[nowPoint].y;
         oldPenColor = PAINTCOLOR;
         oldFillColor = FILLCOLOR;
         oldPenStyle = PENSTYLE;
@@ -236,6 +237,48 @@ void backStep(HWND hwnd) {
         PENSTYLE = oldPenStyle;
         ISFILL = oldIsFill;
         DO_WHAT = oldDo_What;
+        ReleaseDC(hwnd, hdc);
+    }
+}
+// 前进一步
+void forwardStep(HWND hwnd) {
+    if(nowPoint < OPLENGTH) {
+        hdc = GetDC(hwnd);
+        oldPenColor = PAINTCOLOR;
+        oldFillColor = FILLCOLOR;
+        oldPenStyle = PENSTYLE;
+        oldIsFill = ISFILL;
+        oldDo_What = DO_WHAT;
+        // 开始恢复
+        startPoint.x = startPoints[nowPoint].x;
+        startPoint.y = startPoints[nowPoint].y;
+        endPoint.x = endPoints[nowPoint].x;
+        endPoint.y = endPoints[nowPoint].y;
+        PAINTCOLOR = nowPenColors[nowPoint];
+        FILLCOLOR = nowFillColor[nowPoint];
+        PENSTYLE = nowPenStyle[nowPoint];
+        ISFILL = nowIsFill[nowPoint];
+        DO_WHAT = nowPenDo[nowPoint];
+        switch(DO_WHAT)
+        {
+            case LINE_BTN:
+                CreateLine(hdc, startPoint, endPoint);break;
+            case RECT_BTN:
+                CreateRectangle(hdc, startPoint, endPoint);break;
+            case Ellipse_BTN:
+                CreateEllipse(hdc, startPoint, endPoint);break;
+            case CLEAN_BTN:
+                CreateEraser(hdc, startPoint, endPoint);break;
+            default:
+                break;
+        }
+        // 恢复最后一步的操作样式
+        PAINTCOLOR = oldPenColor;
+        FILLCOLOR = oldFillColor;
+        PENSTYLE = oldPenStyle;
+        ISFILL = oldIsFill;
+        DO_WHAT = oldDo_What;
+        nowPoint++;
         ReleaseDC(hwnd, hdc);
     }
 }
@@ -450,7 +493,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case BACK_BTN:
                     backStep(hwnd);break;
                 case FORWARD_BTN:
-                    break;
+                    forwardStep(hwnd);break;
                 default:
                     break;
             }
@@ -511,6 +554,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 nowPoint++;
             }
             isMouseHold = 0;
+            OPLENGTH = nowPoint;
             break;
         }
         case WM_PAINT:
