@@ -1,6 +1,5 @@
 #include <windows.h>
 #include <windowsx.h>
-#include <stdio.h>
 
 const char g_szClassName[] = "myWindowClass";
 // 画笔颜色按钮ID
@@ -190,17 +189,17 @@ void CreateCricle(HDC hdc, struct Point start, struct Point end){
 
 // 重绘
 void ReDraw(HDC hdc, int i) {
-    startPoint.x = startPoints[nowPoint].x;
-    startPoint.y = startPoints[nowPoint].y;
-    endPoint.x = endPoints[nowPoint].x;
-    endPoint.y = endPoints[nowPoint].y;
-    PAINTCOLOR = nowPenColors[nowPoint];
-    FILLCOLOR = nowFillColor[nowPoint];
-    PENSTYLE = nowPenStyle[nowPoint];
-    ISFILL = nowIsFill[nowPoint];
-    DO_WHAT = nowPenDo[nowPoint];
     for (; i < nowPoint; i++)
     {
+        startPoint.x = startPoints[i].x;
+        startPoint.y = startPoints[i].y;
+        endPoint.x = endPoints[i].x;
+        endPoint.y = endPoints[i].y;
+        PAINTCOLOR = nowPenColors[i];
+        FILLCOLOR = nowFillColor[i];
+        PENSTYLE = nowPenStyle[i];
+        ISFILL = nowIsFill[i];
+        DO_WHAT = nowPenDo[i];
         switch(nowPenDo[i])
         {
             case LINE_BTN:
@@ -480,6 +479,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 nowPenStyle[nowPoint] = PENSTYLE;
                 nowIsFill[nowPoint] = ISFILL;
                 nowPenDo[nowPoint] = DO_WHAT;
+                nowPoint++;
             }
             isMouseHold = 0;
             break;
@@ -488,7 +488,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         {
             hdc = BeginPaint(hwnd, &ps);
             // 重绘
-            CreateLine(hdc, startPoint, endPoint);break;
+            CreateLine(hdc, startPoint, endPoint);
+            
             ReDraw(hdc, 0);
             EndPaint(hwnd, &ps);
             break;
