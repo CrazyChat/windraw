@@ -1,6 +1,6 @@
 #include <windows.h>
 #include <windowsx.h>
-#include <stdio.h>
+
 
 const char g_szClassName[] = "myWindowClass";
 // 画笔颜色按钮ID
@@ -27,18 +27,18 @@ const char g_szClassName[] = "myWindowClass";
 #define SOLID_BTN PS_SOLID
 #define DASH_BTN PS_DASH
 
+
 // 保存所有操作, todo改成动态数组
-#define MAXOP 100
 struct Point {
     int x;
     int y;
-}startPoint, endPoint;  // 所有起点、终点
-// int operations[MAXOP];                // 所有操作
-// int nowPoint = 0;                   // 当前操作索引
+}startPoint, endPoint, startPoints[100], endPoints[100];  // 所有起点、终点
+int nowPoint = 0;                   // 当前操作索引
+int operations[100];                // 所有操作
 // 全局变量
 COLORREF PAINTCOLOR = RGB(0, 0, 0);                 // 全局画笔颜色
 COLORREF FILLCOLOR = RGB(255, 255, 255);            // 全局填充颜色
-int PENSTYLE = SOLID_BTN;                             // 全局画笔类型
+int PENSTYLE = SOLID_BTN;                           // 全局画笔类型
 int ISFILL = 0;                                     // 是否填充颜色判断
 int PENWIDTH = 1;                                   // 钢笔粗细
 int DO_WHAT =  LINE_BTN;                            // 画笔功能
@@ -100,16 +100,20 @@ void changePenStyle(int style) {
 }
 
 // 画直线, 参数：HDC, 起点，终点
-void CreateLine(HDC hdc, struct Point start, struct Point end) {
+void CreateLine(HDC hdc, Point start, Point end) {
     HPEN hpen = CreatePen(PENSTYLE, PENWIDTH, PAINTCOLOR);  // 实线
     HPEN oldhpen = (HPEN)SelectObject(hdc, hpen);      // 选入画笔,并保存旧画笔
     MoveToEx(hdc, start.x, start.y, NULL);    // 起点
 	LineTo(hdc, end.x, end.y);            // 终点
     SelectObject(hdc, oldhpen);     // 恢复先前画笔
 	DeleteObject(hpen);            // 删除自创画笔
+    // 记录操作
+    startPoints[nowPoint] = startPoint;
+    endPoints[nowPoint] = endPoint;
+    operations[nowPoint] = LINE_BTN;
 }
 // 画矩形, 参数：HDC, 左顶点，右底终点
-void CreateRectangle(HDC hdc, struct Point start, struct Point end) {
+void CreateRectangle(HDC hdc, int ltX, int ltY, int rbX, int rbY) {
     HPEN hpen, oldhpen;
     HBRUSH hbrush, oldhbrush;
 	hpen = CreatePen(PENSTYLE, PENWIDTH, PAINTCOLOR);          // 创建空画笔
@@ -121,14 +125,14 @@ void CreateRectangle(HDC hdc, struct Point start, struct Point end) {
         hbrush = (HBRUSH)GetStockObject(NULL_BRUSH);
     }
     oldhbrush = (HBRUSH)SelectObject(hdc, hbrush);              // 选入画刷，并保存旧画刷
-    Rectangle(hdc, start.x, start.y, end.x, end.y);
+    Rectangle(hdc, ltX, ltY, rbX, rbY);
     SelectObject(hdc, oldhpen);
 	SelectObject(hdc, oldhbrush);
     DeleteObject(hpen);            // 删除自创画笔
     DeleteObject(hbrush);           //删除画刷
 }
 // 绘制椭圆, 参数：HDC, 外切矩形左上、右下坐标
-void CreateEllipse(HDC hdc, struct Point start, struct Point end) {
+void CreateEllipse(HDC hdc, int ltX, int ltY, int rbX, int rbY) {
     HPEN hpen, oldhpen;
     HBRUSH hbrush, oldhbrush;
     hpen = CreatePen(PENSTYLE, PENWIDTH, PAINTCOLOR);
@@ -139,21 +143,21 @@ void CreateEllipse(HDC hdc, struct Point start, struct Point end) {
         hbrush = (HBRUSH)GetStockObject(NULL_BRUSH);
     }
     oldhbrush = (HBRUSH)SelectObject(hdc, hbrush);
-    Ellipse(hdc, start.x, start.y, end.x, end.y);   // 外切矩形左上、右下坐标
+    Ellipse(hdc, ltX, ltY, rbX, rbY);   // 外切矩形左上、右下坐标
     SelectObject(hdc, oldhpen);
     SelectObject(hdc, oldhbrush);
 	DeleteObject(hbrush);
     DeleteObject(hpen);
 }
 // 橡皮擦, 参数：HDC, 左顶点，右底终点
-void CreateEraser(HDC hdc, struct Point start, struct Point end) {
+void CreateEraser(HDC hdc, int ltX, int ltY, int rbX, int rbY) {
     HPEN hpen, oldhpen;
     HBRUSH hbrush, oldhbrush;
 	hpen = CreatePen(PS_NULL, 0, RGB(255, 255, 255));
     oldhpen = (HPEN)SelectObject(hdc, hpen);
     hbrush = CreateSolidBrush(RGB(255, 255, 255));
     oldhbrush = (HBRUSH)SelectObject(hdc, hbrush);
-    Rectangle(hdc, start.x, start.y, end.x, end.y);
+    Rectangle(hdc, ltX, ltY, rbX, rbY);
     SelectObject(hdc, oldhpen);
 	SelectObject(hdc, oldhbrush);
     DeleteObject(hpen);
@@ -364,12 +368,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_LBUTTONDOWN:        // 鼠标左键按下
         {
             isMouseHold = 1;
-            startPoint.x = GET_X_LPARAM(lParam);
-            startPoint.y = GET_Y_LPARAM(lParam);
-            start_x = GET_X_LPARAM(lParam); /*此处使用该方法是避免鼠标移除操作窗口，而使得获取位置发生错误*/
-            start_y= GET_Y_LPARAM(lParam); /*使用该方法需要 包含头文件<windowsx.h>*/
-            end_x = start_x;
-            end_y = start_y;
+            start_x = GET_X_LPARAM(lParam);
+            start_y = GET_Y_LPARAM(lParam);
+            end_x = GET_X_LPARAM(lParam);
+            end_y = GET_Y_LPARAM(lParam);
+            startPoint.x = GET_X_LPARAM(lParam); /*此处使用该方法是避免鼠标移除操作窗口，而使得获取位置发生错误*/
+            startPoint.y = GET_Y_LPARAM(lParam); /*使用该方法需要 包含头文件<windowsx.h>*/
             endPoint.x = startPoint.x;
             endPoint.y = startPoint.y;
             break;
@@ -391,18 +395,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         {
             if(isMouseHold) {
                 hdc = GetDC(hwnd);
-                endPoint.x = end_x = GET_X_LPARAM(lParam);
-                endPoint.y = end_y = GET_Y_LPARAM(lParam);
+                end_x = GET_X_LPARAM(lParam);
+                end_y = GET_Y_LPARAM(lParam);
+                endPoint.x = GET_X_LPARAM(lParam);
+                endPoint.y = GET_Y_LPARAM(lParam);
                 switch(DO_WHAT)
                 {
                     case LINE_BTN:
                         CreateLine(hdc, startPoint, endPoint);break;
                     case RECT_BTN:
-                        CreateRectangle(hdc, startPoint, endPoint);break;
+                        CreateRectangle(hdc, start_x, start_y, end_x, end_y);break;
                     case CRICLE_BTN:
-                        CreateEllipse(hdc, startPoint, endPoint);break;
+                        CreateEllipse(hdc, start_x, start_y, end_x, end_y);break;
                     case CLEAN_BTN:
-                        CreateEraser(hdc, startPoint, endPoint);break;
+                        CreateEraser(hdc, start_x, start_y, end_x, end_y);break;
                     default:
                         break;
                 }
@@ -413,26 +419,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_PAINT:
         {
-            PAINTSTRUCT ps;
-            hdc = BeginPaint(hwnd, &ps);
-            // todo 重绘
-            // for (i = 0; i < nowPoint; i++)
-            // {
-            //     switch(operations[i])
-            //     {
-            //         case LINE_BTN:
-            //             CreateLine(hdc, startPoints[i], endPoints[i]);break;
-            //         case RECT_BTN:
-            //             CreateRectangle(hdc, start_x, start_y, end_x, end_y);break;
-            //         case CRICLE_BTN:
-            //             CreateEllipse(hdc, start_x, start_y, end_x, end_y);break;
-            //         case CLEAN_BTN:
-            //             CreateEraser(hdc, start_x, start_y, end_x, end_y);break;
-            //         default:
-            //             break;
-            //     }
-            // }
-            EndPaint(hwnd, &ps);
+            // todo 重新绘制所有图形
             break;
         }
         case WM_CLOSE:
