@@ -22,6 +22,8 @@ const char g_szClassName[] = "myWindowClass";
 #define RECT_BTN 32
 #define Ellipse_BTN 33
 #define CLEAN_BTN 34
+#define BACK_BTN 35
+#define FORWARD_BTN 36
 // 画笔类型
 #define SOLID_BTN PS_SOLID
 #define DASH_BTN PS_DASH
@@ -36,6 +38,7 @@ struct Point {
 int nowPoint = 0;                        // 当前操作索引
 COLORREF nowPenColors[MAXOP];            // 画笔颜色
 COLORREF nowFillColor[MAXOP];            // 填充颜色
+
 int nowPenStyle[MAXOP];                  // 画笔类型
 int nowIsFill[MAXOP];                    // 是否填充
 int nowPenDo[MAXOP];                     // 画笔功能
@@ -44,10 +47,11 @@ int nowPenDo[MAXOP];                     // 画笔功能
 // 全局变量
 COLORREF PAINTCOLOR = RGB(0, 0, 0);                 // 全局画笔颜色
 COLORREF FILLCOLOR = RGB(255, 255, 255);            // 全局填充颜色
-int PENSTYLE = SOLID_BTN;                             // 全局画笔类型
-int ISFILL = 0;                                     // 是否填充颜色判断
+COLORREF oldPenColor, oldFillColor;
+int PENSTYLE = SOLID_BTN, oldPenStyle;                             // 全局画笔类型
+int ISFILL = 0, oldIsFill;                                     // 是否填充颜色判断
 int PENWIDTH = 1;                                   // 钢笔粗细
-int DO_WHAT =  LINE_BTN;                            // 画笔功能
+int DO_WHAT =  LINE_BTN, oldDo_What;                            // 画笔功能
 int isMouseHold = 0;                                // 鼠标是否按下
 int wmId, wmEvent;
 PAINTSTRUCT ps;
@@ -103,6 +107,7 @@ void changeDrawWhat(int dowhat) {
 void changePenStyle(int style) {
     PENSTYLE = style;
 }
+
 
 // 画直线, 参数：HDC, 起点，终点
 void CreateLine(HDC hdc, struct Point start, struct Point end) {
@@ -164,8 +169,6 @@ void CreateEraser(HDC hdc, struct Point start, struct Point end) {
     DeleteObject(hpen);
     DeleteObject(hbrush);
 }
-
-
 // 重绘
 void ReDraw(HDC hdc, int i) {
     for (; i < nowPoint; i++)
@@ -179,7 +182,7 @@ void ReDraw(HDC hdc, int i) {
         PENSTYLE = nowPenStyle[i];
         ISFILL = nowIsFill[i];
         DO_WHAT = nowPenDo[i];
-        switch(nowPenDo[i])
+        switch(DO_WHAT)
         {
             case LINE_BTN:
                 CreateLine(hdc, startPoint, endPoint);break;
@@ -192,6 +195,48 @@ void ReDraw(HDC hdc, int i) {
             default:
                 break;
         }
+    }
+}
+// todo 撤销操作
+void backStep(HWND hwnd) {
+    if(nowPoint > 0) {
+        hdc = GetDC(hwnd);
+        nowPoint--;
+        // startPoint.x = startPoints[nowPoint].x;
+        // startPoint.y = startPoints[nowPoint].y;
+        // endPoint.x = endPoints[nowPoint].x;
+        // endPoint.y = endPoints[nowPoint].y;
+        oldPenColor = PAINTCOLOR;
+        oldFillColor = FILLCOLOR;
+        oldPenStyle = PENSTYLE;
+        oldIsFill = ISFILL;
+        oldDo_What = DO_WHAT;
+        PAINTCOLOR = RGB(255, 255, 255);
+        FILLCOLOR = RGB(255, 255, 255);
+        PENSTYLE = nowPenStyle[nowPoint];
+        ISFILL = nowIsFill[nowPoint];
+        DO_WHAT = nowPenDo[nowPoint];
+        switch(DO_WHAT)
+        {
+            case LINE_BTN:
+                CreateLine(hdc, startPoint, endPoint);break;
+            case RECT_BTN:
+                CreateRectangle(hdc, startPoint, endPoint);break;
+            case Ellipse_BTN:
+                CreateEllipse(hdc, startPoint, endPoint);break;
+            case CLEAN_BTN:
+                CreateEraser(hdc, startPoint, endPoint);break;
+            default:
+                break;
+        }
+        ReDraw(hdc, 0);             // 重绘所有，以防被最后一步操作挡住的画面丢失
+        // 恢复最后一步的操作样式
+        PAINTCOLOR = oldPenColor;
+        FILLCOLOR = oldFillColor;
+        PENSTYLE = oldPenStyle;
+        ISFILL = oldIsFill;
+        DO_WHAT = oldDo_What;
+        ReleaseDC(hwnd, hdc);
     }
 }
 
@@ -321,6 +366,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
                 240 /*X坐标*/, 100 /*Y坐标*/, 40 /*宽度*/, 30/*高度*/,
                 hwnd, (HMENU)CLEAN_BTN, (HINSTANCE)GetWindowLong(hwnd, GWL_HINSTANCE), NULL);
+            HWND back_btn = CreateWindow(
+                TEXT("BUTTON"), //按钮控件的类名
+                TEXT("撤销"),
+                WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                290 /*X坐标*/, 100 /*Y坐标*/, 40 /*宽度*/, 30/*高度*/,
+                hwnd, (HMENU)BACK_BTN, (HINSTANCE)GetWindowLong(hwnd, GWL_HINSTANCE), NULL);
+            HWND forward_btn = CreateWindow(
+                TEXT("BUTTON"), //按钮控件的类名
+                TEXT("前进"),
+                WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                340 /*X坐标*/, 100 /*Y坐标*/, 40 /*宽度*/, 30/*高度*/,
+                hwnd, (HMENU)FORWARD_BTN, (HINSTANCE)GetWindowLong(hwnd, GWL_HINSTANCE), NULL);
             // 创建画笔类型
             HWND pen_style = CreateWindow(TEXT("static"), 
                 TEXT("画笔类型"),
@@ -389,6 +446,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     changePenStyle(SOLID_BTN);break;
                 case DASH_BTN:
                     changePenStyle(DASH_BTN);break;
+                // 撤销与前进
+                case BACK_BTN:
+                    backStep(hwnd);break;
+                case FORWARD_BTN:
+                    break;
                 default:
                     break;
             }
