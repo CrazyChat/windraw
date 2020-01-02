@@ -93,28 +93,28 @@ void CreateLine(HDC hdc, int fnPenStyle, int oX, int oY, int nX, int nY) {
 	DeleteObject(hpen);            // 删除自创画笔
 }
 // 画矩形, 参数：HDC, 钢笔风格，左顶点，右底终点 (其中笔色，填充色由全局变量决定)
-void CreateRectangle(HDC hdc, int fnPenStyle, int nWidth, int ltX, int ltY, int rbX, int rbY) {
+void CreateRectangle(HDC hdc, int fnPenStyle, int ltX, int ltY, int rbX, int rbY) {
     HPEN hpen, oldhpen;
     HBRUSH hbrush, oldhbrush;
-	hpen = CreatePen(fnPenStyle, nWidth, PAINTCOLOR);          // 创建空画笔
-    oldhpen = (HPEN)SelectObject(hdc, hpen);                     // 选入画笔, 并保存旧画笔
+	hpen = CreatePen(fnPenStyle, PENWIDTH, PAINTCOLOR);          // 创建空画笔
+    oldhpen = (HPEN)SelectObject(hdc, hpen);                    // 选入画笔, 并保存旧画笔
+    // 判断是否填充颜色
     if(ISFILL) {
         hbrush = CreateSolidBrush(FILLCOLOR);                    // 填充颜色
-        oldhbrush = (HBRUSH)SelectObject(hdc, hbrush);              // 选入画刷，并保存旧画刷
+    } else {
+        hbrush = (HBRUSH)GetStockObject(NULL_BRUSH);
     }
+    oldhbrush = (HBRUSH)SelectObject(hdc, hbrush);              // 选入画刷，并保存旧画刷
     Rectangle(hdc, ltX, ltY, rbX, rbY);
     SelectObject(hdc, oldhpen);
+	SelectObject(hdc, oldhbrush);
     DeleteObject(hpen);            // 删除自创画笔
-    if(ISFILL) {
-	    SelectObject(hdc, oldhbrush);
-        DeleteObject(hbrush);           //删除画刷
-    }
+    DeleteObject(hbrush);           //删除画刷
 }
 // 绘制椭圆, 参数：HDC, 外切矩形左上、右下坐标
 void CreateEllipse(HDC hdc, int ltX, int ltY, int rbX, int rbY) {
     HPEN hpen, oldhpen;
     HBRUSH hbrush, oldhbrush;
-    // hbrush = CreateHatchBrush(HS_CROSS, PAINTCOLOR);
     hbrush = (HBRUSH)GetStockObject(NULL_BRUSH);
     oldhbrush = (HBRUSH)SelectObject(hdc, hbrush);
     hpen = CreatePen(PS_SOLID, PENWIDTH, PAINTCOLOR);
@@ -344,13 +344,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     case LINE_BTN:
                         CreateLine(hdc, 4, start_x, start_y, end_x, end_y);break;
                     case RECT_BTN:
-                        CreateRectangle(hdc, PS_SOLID, 1, start_x, start_y, end_x, end_y);break;
+                        CreateRectangle(hdc, PS_SOLID, start_x, start_y, end_x, end_y);break;
                     case CRICLE_BTN:
                         CreateEllipse(hdc, start_x, start_y, end_x, end_y);break;
                     case FILLAREA_BTN:
-                        CreateRectangle(hdc, PS_NULL, 1, start_x, start_y, end_x, end_y);break;
+                        CreateRectangle(hdc, PS_NULL, start_x, start_y, end_x, end_y);break;
                     case CLEAN_BTN:
-                        CreateRectangle(hdc, PS_NULL, 1, start_x, start_y, end_x, end_y);break;
+                        CreateRectangle(hdc, PS_NULL, start_x, start_y, end_x, end_y);break;
                     default:
                         break;
                 }
