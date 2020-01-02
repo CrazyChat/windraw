@@ -33,10 +33,10 @@ const char g_szClassName[] = "myWindowClass";
 struct Point {
     int x;
     int y;
-}startPoint, endPoint, startPoints[OPMAX], endPoints[OPMAX];  // 所有起点、终点
+}startPoint, oldStartPoint, endPoint, oldEndPoint, startPoints[OPMAX], endPoints[OPMAX];  // 所有起点、终点
 
 int nowPoint = 0;                        // 当前操作索引
-int OPLENGTH = 0;                        // 已有操作最大值
+int OPLENGTH = 0;                        // 已有操作最大值, 用于前进操作防止超出范围
 COLORREF nowPenColors[OPMAX];            // 画笔颜色
 COLORREF nowFillColor[OPMAX];            // 填充颜色
 
@@ -109,7 +109,6 @@ void changePenStyle(int style) {
     PENSTYLE = style;
 }
 
-
 // 画直线, 参数：HDC, 起点，终点
 void CreateLine(HDC hdc, struct Point start, struct Point end) {
     HPEN hpen = CreatePen(PENSTYLE, PENWIDTH, PAINTCOLOR);  // 实线
@@ -172,6 +171,8 @@ void CreateEraser(HDC hdc, struct Point start, struct Point end) {
 }
 // 保存所有旧样式
 void SaveOldStyle() {
+    oldStartPoint = startPoint;
+    oldEndPoint = endPoint;
     oldPenColor = PAINTCOLOR;
     oldFillColor = FILLCOLOR;
     oldPenStyle = PENSTYLE;
@@ -180,6 +181,8 @@ void SaveOldStyle() {
 }
 // 恢复旧样式
 void ReOldStyle() {
+    startPoint = oldStartPoint;
+    endPoint = oldEndPoint;
     PAINTCOLOR = oldPenColor;
     FILLCOLOR = oldFillColor;
     PENSTYLE = oldPenStyle;
@@ -488,25 +491,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             endPoint.y = startPoint.y;
             break;
         }
-        // case WM_MOUSEMOVE:          // 鼠标不松开移动
-        // {
-        //     if(isMouseHold)          // bMouseDown记录操作过程中是否按下鼠标
-        //     {
-        //         hdc = GetDC(hwnd);
-        //         // 覆盖上一条
-        //         SetROP2(hdc,R2_NOT);
-        //         DoFunc(DO_WHAT);
-        //         // 绘制新操作
-        //         SetROP2(hdc, R2_COPYPEN);
-        //         endPoint.x = GET_X_LPARAM(lParam);
-        //         endPoint.y = GET_Y_LPARAM(lParam);
-        //         DoFunc(DO_WHAT);
-        //         // 重新绘制前面所有操作防止因为新操作移动挡住而丢失
-        //         // ReDraw(hdc, 0);
-        //         ReleaseDC(hwnd, hdc);
-        //     }
-        //     break;
-        // }
+        case WM_MOUSEMOVE:          // 鼠标不松开移动
+        {
+            if(isMouseHold)          // isMouseHold记录操作过程中是否按下鼠标
+            {
+                hdc = GetDC(hwnd);
+                // 覆盖上一条
+                SaveOldStyle();
+                PAINTCOLOR = RGB(255, 255, 255);
+                FILLCOLOR = RGB(255, 255, 255);
+                DoFunc(DO_WHAT);
+                // 绘制新操作
+                ReOldStyle();
+                endPoint.x = GET_X_LPARAM(lParam);
+                endPoint.y = GET_Y_LPARAM(lParam);
+                DoFunc(DO_WHAT);
+                // 重新绘制前面所有操作防止因为新操作移动挡住而丢失
+                SaveOldStyle();
+                ReDraw(hdc, 0);
+                ReOldStyle();
+                ReleaseDC(hwnd, hdc);
+            }
+            break;
+        }
         case WM_LBUTTONUP:          // 鼠标左键松开
         {
             if(isMouseHold) {
