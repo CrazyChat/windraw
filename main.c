@@ -21,7 +21,7 @@ const char g_szClassName[] = "myWindowClass";
 #define LINE_BTN 31
 #define RECT_BTN 32
 #define CRICLE_BTN 33
-#define CLEAN_BTN 35
+#define CLEAN_BTN 34
 // 画笔类型
 #define SOLID_BTN PS_SOLID
 #define DASH_BTN PS_DASH
@@ -29,7 +29,7 @@ const char g_szClassName[] = "myWindowClass";
 // 全局变量
 COLORREF PAINTCOLOR = RGB(0, 0, 0);                 // 全局画笔颜色
 COLORREF FILLCOLOR = RGB(255, 255, 255);            // 全局填充颜色
-int PENSTYLE = DASH_BTN;                             // 全局画笔类型
+int PENSTYLE = SOLID_BTN;                             // 全局画笔类型
 int ISFILL = 0;                                     // 是否填充颜色判断
 int PENWIDTH = 1;                                   // 钢笔粗细
 int DO_WHAT =  LINE_BTN;                            // 画笔功能
@@ -85,7 +85,7 @@ void changeFillColor(int color) {
 void changeDrawWhat(int dowhat) {
     DO_WHAT = dowhat;
 }
-// 修改画笔事件
+// 修改画笔类型
 void changePenStyle(int style) {
     PENSTYLE = style;
 }
@@ -136,9 +136,22 @@ void CreateEllipse(HDC hdc, int ltX, int ltY, int rbX, int rbY) {
 	DeleteObject(hbrush);
     DeleteObject(hpen);
 }
-// 绘制圆, 参数：
+// 橡皮擦, 参数：HDC, 左顶点，右底终点
+void CreateEraser(HDC hdc, int ltX, int ltY, int rbX, int rbY) {
+    HPEN hpen, oldhpen;
+    HBRUSH hbrush, oldhbrush;
+	hpen = CreatePen(PS_NULL, 0, RGB(255, 255, 255));
+    oldhpen = (HPEN)SelectObject(hdc, hpen);
+    hbrush = CreateSolidBrush(RGB(255, 255, 255));
+    oldhbrush = (HBRUSH)SelectObject(hdc, hbrush);
+    Rectangle(hdc, ltX, ltY, rbX, rbY);
+    SelectObject(hdc, oldhpen);
+	SelectObject(hdc, oldhbrush);
+    DeleteObject(hpen);
+    DeleteObject(hbrush);
+}
+// todo绘制圆, 参数：
 void CreateCircle() {
-
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -328,7 +341,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case CRICLE_BTN:
                     changeDrawWhat(CRICLE_BTN);break;
                 case CLEAN_BTN:
-                    changeFillColor(FILL_BTN_NULL);
                     changeDrawWhat(CLEAN_BTN);break;
                 // 改变画笔类型
                 case SOLID_BTN:
@@ -351,13 +363,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         // case WM_MOUSEMOVE:          // 鼠标不松开移动
         // {
-        //     if(isMouseHold)          // bMouseDown记录操作过程中是否按下鼠标
+        //     if(MK_LBUTTON)          // bMouseDown记录操作过程中是否按下鼠标
         //     {
         //         hdc = GetDC(hwnd);
+        //         end_x = GET_X_LPARAM(lParam);
+        //         end_y = GET_Y_LPARAM(lParam);
         //         MoveToEx(hdc, start_x, start_y, NULL);
-        //         LineTo(hdc, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        //         LineTo(hdc, end_x, end_y);
         //         ReleaseDC(hwnd, hdc);
         //     }
+        //     break;
         // }
         case WM_LBUTTONUP:          // 鼠标左键松开
         {
@@ -374,7 +389,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     case CRICLE_BTN:
                         CreateEllipse(hdc, start_x, start_y, end_x, end_y);break;
                     case CLEAN_BTN:
-                        CreateRectangle(hdc, PS_NULL, start_x, start_y, end_x, end_y);break;
+                        CreateEraser(hdc, start_x, start_y, end_x, end_y);break;
                     default:
                         break;
                 }
